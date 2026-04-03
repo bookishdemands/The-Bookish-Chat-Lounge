@@ -1,0 +1,1064 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Bookish Chat Lounge</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#000000;
+      --card:#0d0d12;
+      --card-2:#13131a;
+      --line:#262632;
+      --text:#f7f7fb;
+      --muted:#9a9aaa;
+      --soft:#6b6b78;
+      --accent:#ff00b0;
+      --accent-2:#ff42c6;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif}
+    .mono{font-family:'JetBrains Mono',monospace}
+    .page-wrap{max-width:1200px;margin:0 auto;padding:24px 16px 80px}
+    .glass{
+      background:linear-gradient(145deg,#0b0b10 0%, #111118 100%);
+      border:1px solid var(--line);
+      border-radius:20px;
+    }
+    .section-title{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);font-weight:700}
+    .muted{color:var(--muted)}
+    .field-label{
+      display:block;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+    }
+    .input, .select, .textarea{
+      width:100%;
+      border:1px solid #303040;
+      background:#09090d;
+      color:#fff;
+      border-radius:12px;
+      padding:13px 14px;
+      font-size:14px;
+      outline:none;
+      transition:.2s ease;
+    }
+    .input:focus, .select:focus, .textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 2px rgba(255,0,176,.18);
+    }
+    .textarea{min-height:110px;resize:vertical}
+    .engine-card{
+      border:1px solid #2e2e3a;
+      border-radius:18px;
+      background:linear-gradient(145deg,#101016 0%, #14141d 100%);
+      padding:16px;
+      cursor:pointer;
+      transition:.22s ease;
+      height:100%;
+    }
+    .engine-card:hover{
+      border-color:var(--accent);
+      transform:translateY(-2px);
+      box-shadow:0 10px 30px rgba(255,0,176,.08);
+    }
+    .engine-card.active{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(255,0,176,.35), 0 16px 34px rgba(255,0,176,.12);
+      background:linear-gradient(145deg,#180914 0%, #15111a 100%);
+    }
+    .engine-chip{
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+      padding:6px 10px;border-radius:999px;
+      background:rgba(255,0,176,.1);color:#ff7fd7;border:1px solid rgba(255,0,176,.18);
+    }
+    .toggle{
+      border:1px solid #343445;
+      background:#0a0a0f;
+      border-radius:999px;
+      color:#c7c7d4;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:700;
+      transition:.2s ease;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .toggle.active{
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent-2) 100%);
+      color:white;border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(255,0,176,.35);
+    }
+    .action-btn{
+      border:none;border-radius:14px;padding:14px 16px;font-weight:700;font-size:14px;
+      cursor:pointer;transition:.2s ease;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    }
+    .btn-primary{
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent-2) 100%);
+      color:white;
+    }
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(255,0,176,.18)}
+    .btn-secondary{
+      background:#0a0a10;border:1px solid #333342;color:#e7e7f2;
+    }
+    .btn-secondary:hover{border-color:var(--accent);color:#fff}
+    .btn-danger{
+      background:#140d12;border:1px solid #4a2740;color:#ff99dc;
+    }
+    .result-card{
+      background:linear-gradient(145deg,#180914 0%,#111118 100%);
+      border:1px solid rgba(255,0,176,.24);
+      border-radius:18px;
+      padding:18px;
+    }
+    .sub-card{
+      background:#0b0b10;border:1px solid #262634;border-radius:16px;padding:16px;
+    }
+    .vault-card{
+      background:#0a0a0f;border:1px solid #2e2e3a;border-radius:16px;padding:14px;
+    }
+    .toast{
+      position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+      background:linear-gradient(90deg,var(--accent) 0%, var(--accent-2) 100%);
+      color:#fff;padding:14px 18px;border-radius:14px;font-size:13px;font-weight:700;z-index:9999;
+      box-shadow:0 10px 30px rgba(255,0,176,.25);
+    }
+    .small-scroll{max-height:420px;overflow:auto}
+    .small-scroll::-webkit-scrollbar{width:10px}
+    .small-scroll::-webkit-scrollbar-thumb{background:#2a2a38;border-radius:999px}
+    @media (max-width: 768px){
+      .page-wrap{padding:16px 12px 72px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <header class="glass p-6 md:p-8 mb-6">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <div class="engine-chip mb-4"><i data-lucide="messages-square" class="w-3.5 h-3.5"></i> Private reader conversation studio</div>
+          <h1 class="text-4xl md:text-5xl font-black tracking-tight">The Bookish Chat Lounge</h1>
+          <p class="mt-3 max-w-3xl text-sm md:text-base muted">
+            Better book talk for buddy reads, read-alongs, book clubs, Discords, and group chats. Build sharper prompts, hotter debates, stronger recaps, and post-ready discussion content without sounding dry.
+          </p>
+        </div>
+        <div class="glass p-4 min-w-[260px]">
+          <p class="section-title mb-2">Core purpose</p>
+          <p class="text-sm text-white font-semibold">Help readers create better conversations, shared engagement, and group discussion momentum.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="glass p-6 mb-6">
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div>
+          <p class="section-title">Output engines</p>
+          <p class="muted text-sm mt-1">Choose the engine that fits your room, reading stage, and chaos level.</p>
+        </div>
+        <div class="text-xs muted mono">10 engines locked</div>
+      </div>
+      <div id="engine-grid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </section>
+
+    <div class="grid xl:grid-cols-[1.05fr_.95fr] gap-6">
+      <section class="glass p-6">
+        <div class="flex items-center justify-between gap-4 mb-5">
+          <div>
+            <p class="section-title">Conversation setup</p>
+            <p class="muted text-sm mt-1">Tell the lounge what kind of discussion you need.</p>
+          </div>
+          <div class="mono text-xs text-[#ff7fd7]" id="selected-engine-badge">No engine selected</div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="field-label">Book title</label>
+            <input id="bookTitle" class="input" placeholder="What are y'all reading?" />
+          </div>
+          <div>
+            <label class="field-label">Author</label>
+            <input id="author" class="input" placeholder="Who wrote the mess?" />
+          </div>
+          <div>
+            <label class="field-label">Genre / subgenre</label>
+            <input id="genre" class="input" placeholder="Dark romance, paranormal, thriller..." />
+          </div>
+          <div>
+            <label class="field-label">Reading stage</label>
+            <select id="readingStage" class="select">
+              <option>About to Start</option>
+              <option>Early Chapters</option>
+              <option>Midway</option>
+              <option>Almost Finished</option>
+              <option>Finished</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Spoiler level</label>
+            <select id="spoilerLevel" class="select">
+              <option>Spoiler-Free</option>
+              <option>Light Spoilers</option>
+              <option>Full Spoilers</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Discussion tone</label>
+            <select id="tone" class="select">
+              <option>Funny</option>
+              <option>Chaotic</option>
+              <option>Analytical</option>
+              <option>Soft</option>
+              <option>Messy</option>
+              <option>Dramatic</option>
+              <option>Book Club Polished</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Group type</label>
+            <select id="groupType" class="select">
+              <option>Book Club</option>
+              <option>Buddy Read</option>
+              <option>Discord Group</option>
+              <option>Group Chat</option>
+              <option>Creator Read-Along</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Character focus</label>
+            <select id="characterFocus" class="select">
+              <option>MMC</option>
+              <option>FMC</option>
+              <option>Couple</option>
+              <option>Side Character</option>
+              <option>Whole Cast</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Main trope / theme</label>
+            <input id="tropeTheme" class="input" placeholder="Enemies to lovers, obsession, betrayal..." />
+          </div>
+          <div>
+            <label class="field-label">Emotional reaction</label>
+            <select id="emotion" class="select">
+              <option>Obsessed</option>
+              <option>Annoyed</option>
+              <option>Unwell</option>
+              <option>Invested</option>
+              <option>Confused</option>
+              <option>Wrecked</option>
+              <option>Entertained</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="field-label">Quote or scene focus</label>
+            <input id="quoteScene" class="input" placeholder="A scene, line, twist, red flag, or moment to center" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="field-label">Debate topic or host note</label>
+            <textarea id="notes" class="textarea" placeholder="Anything specific you want the output to lean into?"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <div class="flex items-center justify-between gap-4 mb-3">
+            <div>
+              <p class="section-title">Premium extras</p>
+              <p class="muted text-sm mt-1">Turn one engine into a mini-lab.</p>
+            </div>
+          </div>
+          <div id="extras-wrap" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button id="generateBtn" class="action-btn btn-primary"><i data-lucide="sparkles" class="w-4 h-4"></i> Generate lounge output</button>
+          <button id="saveProgressBtn" class="action-btn btn-secondary"><i data-lucide="save" class="w-4 h-4"></i> Save progress</button>
+          <button id="resetBtn" class="action-btn btn-secondary"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset</button>
+        </div>
+      </section>
+
+      <section class="space-y-6">
+        <div class="glass p-6">
+          <div class="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <p class="section-title">Results</p>
+              <p class="muted text-sm mt-1">Build discussion prompts, recaps, posts, and talking points.</p>
+            </div>
+          </div>
+
+          <div id="resultEmpty" class="sub-card text-center py-10">
+            <i data-lucide="message-circle-more" class="w-10 h-10 mx-auto text-[#ff66cf] mb-3"></i>
+            <p class="font-semibold">No output yet.</p>
+            <p class="text-sm muted mt-2">Pick an engine and generate your first lounge bundle.</p>
+          </div>
+
+          <div id="resultPanel" class="hidden">
+            <div id="resultCapture" class="result-card">
+              <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <div class="engine-chip mb-3"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Generated lounge bundle</div>
+                  <h2 id="resultTitle" class="text-2xl font-black"></h2>
+                  <p id="resultMeta" class="muted text-sm mt-2"></p>
+                </div>
+                <div class="text-right">
+                  <p class="section-title mb-1">Selected engine</p>
+                  <p id="resultEngineName" class="text-sm font-semibold text-white"></p>
+                </div>
+              </div>
+
+              <div class="grid gap-4">
+                <div class="sub-card">
+                  <p class="section-title mb-2">What this is</p>
+                  <p id="resultWhat" class="text-sm"></p>
+                </div>
+
+                <div class="sub-card">
+                  <p class="section-title mb-2">Best used for</p>
+                  <p id="resultBest" class="text-sm"></p>
+                </div>
+
+                <div class="sub-card">
+                  <p class="section-title mb-2">Conversation starter</p>
+                  <p id="starterText" class="text-sm leading-7 whitespace-pre-wrap"></p>
+                </div>
+
+                <div class="sub-card">
+                  <p class="section-title mb-2">Prompt set</p>
+                  <div id="promptList" class="space-y-2 text-sm"></div>
+                </div>
+
+                <div id="bonusWrap" class="sub-card hidden">
+                  <p class="section-title mb-2">Extras</p>
+                  <div id="bonusList" class="space-y-2 text-sm"></div>
+                </div>
+
+                <div class="sub-card">
+                  <p class="section-title mb-2">Post-ready recap</p>
+                  <p id="recapText" class="text-sm leading-7 whitespace-pre-wrap"></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3 mt-4">
+              <button id="saveResultBtn" class="action-btn btn-primary"><i data-lucide="archive" class="w-4 h-4"></i> Save result</button>
+              <button id="favoriteBtn" class="action-btn btn-secondary"><i data-lucide="heart" class="w-4 h-4"></i> Favorite</button>
+              <button id="copyResultBtn" class="action-btn btn-secondary"><i data-lucide="copy" class="w-4 h-4"></i> Copy result</button>
+              <button id="exportTxtBtn" class="action-btn btn-secondary"><i data-lucide="file-text" class="w-4 h-4"></i> Export TXT</button>
+              <button id="exportPdfBtn" class="action-btn btn-secondary"><i data-lucide="file-output" class="w-4 h-4"></i> Export PDF</button>
+              <button id="exportPngBtn" class="action-btn btn-secondary"><i data-lucide="image-down" class="w-4 h-4"></i> Download PNG</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-6">
+          <div class="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <p class="section-title">Saved results vault</p>
+              <p class="muted text-sm mt-1">Store your best discussion bundles.</p>
+            </div>
+          </div>
+          <div id="savedVault" class="small-scroll space-y-3"></div>
+        </div>
+
+        <div class="glass p-6">
+          <div class="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <p class="section-title">Favorites vault</p>
+              <p class="muted text-sm mt-1">Keep your best talking points close.</p>
+            </div>
+          </div>
+          <div id="favoritesVault" class="small-scroll space-y-3"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const engines = [
+  {
+    id:'buddy-checkin',
+    name:'Buddy Read Check-In Engine',
+    what:'Creates update prompts for shared reading progress, group reactions, and momentum checks.',
+    best:'Best for daily or weekly read-along updates with a partner, group chat, or Discord.',
+    style:'Check-in prompts'
+  },
+  {
+    id:'pre-read-vibes',
+    name:'Pre-Read Vibes Engine',
+    what:'Builds expectation-setting prompts before the first chapter even lands.',
+    best:'Best for announcing a new group read and getting people invested before starting.',
+    style:'Expectation prompts'
+  },
+  {
+    id:'chapter-reaction',
+    name:'Chapter Reaction Engine',
+    what:'Turns live chapter reactions into punchy discussion prompts and content ideas.',
+    best:'Best for “I just finished chapter __” energy, live reading chaos, and immediate reactions.',
+    style:'Live reaction prompts'
+  },
+  {
+    id:'halfway-discussion',
+    name:'Halfway Discussion Engine',
+    what:'Creates midpoint prompts to check pacing, character shifts, theories, and emotional damage.',
+    best:'Best for keeping the conversation active when the group is in the middle of the book.',
+    style:'Midpoint discussion'
+  },
+  {
+    id:'final-verdict',
+    name:'Final Verdict Engine',
+    what:'Builds closing discussion prompts, recap angles, and end-of-book group reactions.',
+    best:'Best for when everyone is finished and it is time to rank, drag, praise, and unpack.',
+    style:'Wrap-up prompts'
+  },
+  {
+    id:'character-debate',
+    name:'Character Debate Engine',
+    what:'Generates prompts that make readers argue over motives, choices, and who really carried the story.',
+    best:'Best for hot takes about the MMC, FMC, side characters, and questionable behavior.',
+    style:'Debate prompts'
+  },
+  {
+    id:'red-flag-debate',
+    name:'Red Flag Debate Engine',
+    what:'Builds chaotic conversation starters around danger, obsession, loyalty, and bad decisions.',
+    best:'Best for “would you keep him anyway?” style questions and morally grey chaos.',
+    style:'Red flag prompts'
+  },
+  {
+    id:'quote-talk',
+    name:'Quote Talk Engine',
+    what:'Turns favorite lines, wild quotes, and scene snippets into richer discussion moments.',
+    best:'Best for line-based posts, quote slides, discussion cards, and emotional reaction prompts.',
+    style:'Quote discussion'
+  },
+  {
+    id:'poll-story-game',
+    name:'Poll & Story Game Engine',
+    what:'Creates interactive poll prompts, story-game angles, and engagement-first content.',
+    best:'Best for stories, Discord polls, casual book club fun, and increasing participation.',
+    style:'Interactive prompts'
+  },
+  {
+    id:'group-recap',
+    name:'Group Recap Engine',
+    what:'Builds shared recap formats that summarize the read, the debate, and the final room energy.',
+    best:'Best for post-read summary posts, carousel recaps, and clean community wrap-ups.',
+    style:'Shared recap formats'
+  }
+];
+
+const extras = [
+  {id:'debateAngle', label:'Include debate angle'},
+  {id:'pollIdeas', label:'Include poll ideas'},
+  {id:'storyGame', label:'Include story game prompt'},
+  {id:'spicyVersion', label:'Include spicy version'},
+  {id:'softerVersion', label:'Include softer version'},
+  {id:'quickVersion', label:'Include short version'},
+  {id:'longVersion', label:'Include long version'},
+  {id:'hostPrompt', label:'Include host / moderator prompt'},
+  {id:'socialCaption', label:'Include social caption version'}
+];
+
+let selectedEngineId = engines[0].id;
+let currentResult = null;
+
+const $ = (id) => document.getElementById(id);
+
+function showToast(message){
+  const existing = document.querySelector('.toast');
+  if(existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+function esc(str=''){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+function renderEngines(){
+  const wrap = $('engine-grid');
+  wrap.innerHTML = engines.map((engine, idx) => `
+    <button class="engine-card text-left ${engine.id===selectedEngineId?'active':''}" data-engine="${engine.id}">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <span class="engine-chip">Engine ${idx+1}</span>
+        <span class="mono text-xs text-[#ff86da]">${esc(engine.style)}</span>
+      </div>
+      <h3 class="text-lg font-black leading-tight">${esc(engine.name)}</h3>
+      <p class="text-sm muted mt-3"><span class="text-white font-semibold">What it is:</span> ${esc(engine.what)}</p>
+      <p class="text-sm muted mt-2"><span class="text-white font-semibold">Best used for:</span> ${esc(engine.best)}</p>
+    </button>
+  `).join('');
+
+  [...document.querySelectorAll('[data-engine]')].forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedEngineId = btn.dataset.engine;
+      renderEngines();
+      updateSelectedEngineBadge();
+    });
+  });
+}
+
+function renderExtras(){
+  const wrap = $('extras-wrap');
+  wrap.innerHTML = extras.map(extra => `
+    <button type="button" class="toggle" data-extra="${extra.id}">${esc(extra.label)}</button>
+  `).join('');
+  [...wrap.querySelectorAll('[data-extra]')].forEach(btn=>{
+    btn.addEventListener('click', ()=> btn.classList.toggle('active'));
+  });
+}
+
+function updateSelectedEngineBadge(){
+  const engine = engines.find(e => e.id === selectedEngineId);
+  $('selected-engine-badge').textContent = engine ? engine.name : 'No engine selected';
+}
+
+function getExtraState(){
+  const state = {};
+  extras.forEach(extra=>{
+    state[extra.id] = !!document.querySelector(`[data-extra="${extra.id}"]`)?.classList.contains('active');
+  });
+  return state;
+}
+
+function getFormData(){
+  return {
+    selectedEngineId,
+    bookTitle:$('bookTitle').value.trim(),
+    author:$('author').value.trim(),
+    genre:$('genre').value.trim(),
+    readingStage:$('readingStage').value,
+    spoilerLevel:$('spoilerLevel').value,
+    tone:$('tone').value,
+    groupType:$('groupType').value,
+    characterFocus:$('characterFocus').value,
+    tropeTheme:$('tropeTheme').value.trim(),
+    emotion:$('emotion').value,
+    quoteScene:$('quoteScene').value.trim(),
+    notes:$('notes').value.trim(),
+    extras:getExtraState()
+  };
+}
+
+function makeStarter(data, engine){
+  const title = data.bookTitle || 'this book';
+  const trope = data.tropeTheme || 'the main drama';
+  const quoteScene = data.quoteScene || 'the scene that shifted the room';
+  const map = {
+    'buddy-checkin': `Where is everybody at in ${title}, and what has hit the hardest so far? Be honest. Did ${trope} pull you in or stress you out?`,
+    'pre-read-vibes': `Before we start ${title}, what are you expecting from ${trope}, and what are you already hoping this book does not play with?`,
+    'chapter-reaction': `Immediate reaction check. After ${quoteScene}, are we still reading respectfully or has ${title} already turned this room chaotic?`,
+    'halfway-discussion': `Halfway through ${title}, what is the biggest shift so far? Character behavior, pacing, chemistry, or the fact that ${trope} is working too well?`,
+    'final-verdict': `Now that ${title} is done, what is the final room verdict? Who carried, who annoyed, and what are we still thinking about?`,
+    'character-debate': `Character court is open. Is the ${data.characterFocus} justified, messy, manipulative, iconic, or all of the above in ${title}?`,
+    'red-flag-debate': `Red flag meeting. At what point in ${title} did the behavior stop being cute and start becoming a community issue?`,
+    'quote-talk': `Let’s talk lines. Did ${quoteScene} earn the reaction it got, or are we overvaluing the quote because the character is fine?`,
+    'poll-story-game': `Time to make ${title} interactive. What is the cleanest question we can throw at the room that will split opinions immediately?`,
+    'group-recap': `Let’s recap ${title}. What defined the room energy: the plot, the chemistry, the red flags, or the group’s refusal to stay rational?`
+  };
+  return map[engine.id];
+}
+
+function buildPromptSet(data, engine){
+  const title = data.bookTitle || 'this book';
+  const trope = data.tropeTheme || 'the main trope';
+  const quoteScene = data.quoteScene || 'the scene in question';
+  const notes = data.notes || 'room energy';
+  const arr = [];
+
+  arr.push(`How did ${title} match or betray your expectations at the ${data.readingStage.toLowerCase()} stage?`);
+  arr.push(`What is one opinion about ${data.characterFocus} that would split a ${data.groupType.toLowerCase()} immediately?`);
+  arr.push(`How well did ${trope} land for you: perfectly, almost, or not enough? Explain the difference.`);
+  arr.push(`What part of ${title} feels most shaped by ${data.tone.toLowerCase()} energy: the banter, the tension, the pacing, or the crashout?`);
+
+  const engineSpecific = {
+    'buddy-checkin': [
+      `What chapter range are you in, and what is your emotional condition right now?`,
+      `Is the book gaining momentum, stalling, or actively ruining your plans?`,
+      `What do you need from the next section to keep reading with enthusiasm?`
+    ],
+    'pre-read-vibes': [
+      `What are you hoping this author does right from page one?`,
+      `Which trope in ${title} are you most ready to defend or drag?`,
+      `What would make this read-along instantly addictive for the group?`
+    ],
+    'chapter-reaction': [
+      `What exactly did ${quoteScene} change for you?`,
+      `Did that moment deepen your investment or make you side-eye the whole plot?`,
+      `Which reaction fits best: screaming, pacing, suspicious, or publicly unwell?`
+    ],
+    'halfway-discussion': [
+      `Who is winning the room at the midpoint, and why?`,
+      `Has the chemistry paid off yet or are we still waiting on real damage?`,
+      `What is the strongest theory or fear you have for the ending?`
+    ],
+    'final-verdict': [
+      `Was the ending earned, rushed, cruel, satisfying, or all at once?`,
+      `Who left the deepest impression after finishing ${title}?`,
+      `Would you recommend it, and with what warning label?`
+    ],
+    'character-debate': [
+      `Which choice by the ${data.characterFocus} deserves the harshest room discussion?`,
+      `Are we reading motive, manipulation, trauma, loyalty, or plain foolishness?`,
+      `Who does the room defend too much in ${title}?`
+    ],
+    'red-flag-debate': [
+      `Which red flag in ${title} would you excuse in fiction and never in real life?`,
+      `What behavior crossed the line from attractive mess to public concern?`,
+      `Would you keep them anyway, and what would your excuse be?`
+    ],
+    'quote-talk': [
+      `Why did ${quoteScene} hit so hard?`,
+      `Was the line powerful because it was well-written or because the character already had you compromised?`,
+      `Which quote deserves a group post immediately?`
+    ],
+    'poll-story-game': [
+      `What poll question would create the fastest split in opinions?`,
+      `What quick story game could get silent readers to participate?`,
+      `What would be the cleanest this-or-that for this room?`
+    ],
+    'group-recap': [
+      `What should the room remember most about this read?`,
+      `How would you describe the group’s reading energy in one sentence?`,
+      `What is the best shared recap angle for posting this book?`
+    ]
+  };
+
+  arr.push(...(engineSpecific[engine.id] || []));
+  if (notes) arr.push(`What part of the room context matters most here: ${notes}?`);
+  return arr;
+}
+
+function buildBonus(data, engine){
+  const out = [];
+  const e = data.extras;
+  const title = data.bookTitle || 'this book';
+  const trope = data.tropeTheme || 'the trope';
+
+  if (e.debateAngle) out.push(`Debate angle: Is ${trope} what made ${title} work, or is everybody crediting the trope for what the characters actually carried?`);
+  if (e.pollIdeas) out.push(`Poll idea: “Who is more responsible for the room chaos in ${title}?”`);
+  if (e.storyGame) out.push(`Story game: “Keep, drag, defend, or block” using the main characters from ${title}.`);
+  if (e.spicyVersion) out.push(`Spicy version: Ask the room which moment felt the most dangerous, obsessive, or impossible to defend.`);
+  if (e.softerVersion) out.push(`Softer version: Ask the room what emotional thread or character moment felt the most human.`);
+  if (e.quickVersion) out.push(`Quick version: “Rate your current condition after ${title} in one word.”`);
+  if (e.longVersion) out.push(`Long version: Build a 4-part discussion thread unpacking chemistry, pacing, character choices, and ending payoff.`);
+  if (e.hostPrompt) out.push(`Host prompt: Open the room by naming one specific lane of discussion so the chat does not drift into random noise.`);
+  if (e.socialCaption) out.push(`Social caption angle: “This room opened for ${title} and nobody left with their judgment intact.”`);
+  return out;
+}
+
+function buildRecap(data, engine){
+  const title = data.bookTitle || 'this book';
+  const author = data.author ? ` by ${data.author}` : '';
+  const trope = data.tropeTheme || 'the central trope';
+  return `Tonight’s lounge file: ${title}${author}. We ran the ${engine.name} in a ${data.tone.toLowerCase()} ${data.groupType.toLowerCase()} lane with ${data.spoilerLevel.toLowerCase()} energy. The room focused on ${data.characterFocus.toLowerCase()} dynamics, ${trope}, and the emotional aftermath of ${data.quoteScene || 'the book’s biggest moments'}. Result: stronger questions, sharper reactions, and better conversation than “it was good.”`;
+}
+
+function generateResult(){
+  const data = getFormData();
+  const engine = engines.find(e => e.id === data.selectedEngineId);
+  if(!engine){
+    showToast('Pick an engine first.');
+    return;
+  }
+  if(!data.bookTitle){
+    showToast('Add a book title first.');
+    return;
+  }
+
+  const result = {
+    id: Date.now(),
+    createdAt: new Date().toISOString(),
+    data,
+    engine,
+    starter: makeStarter(data, engine),
+    prompts: buildPromptSet(data, engine),
+    bonus: buildBonus(data, engine),
+    recap: buildRecap(data, engine)
+  };
+  currentResult = result;
+  renderResult(result);
+}
+
+function renderResult(result){
+  $('resultEmpty').classList.add('hidden');
+  $('resultPanel').classList.remove('hidden');
+
+  $('resultTitle').textContent = result.data.bookTitle;
+  $('resultMeta').textContent = `${result.data.groupType} • ${result.data.readingStage} • ${result.data.spoilerLevel} • ${result.data.tone}`;
+  $('resultEngineName').textContent = result.engine.name;
+  $('resultWhat').textContent = result.engine.what;
+  $('resultBest').textContent = result.engine.best;
+  $('starterText').textContent = result.starter;
+  $('recapText').textContent = result.recap;
+
+  $('promptList').innerHTML = result.prompts.map((item, idx)=>`
+    <div class="flex gap-3">
+      <span class="mono text-[#ff7fd7] text-xs mt-1">${idx+1}.</span>
+      <p>${esc(item)}</p>
+    </div>
+  `).join('');
+
+  if(result.bonus.length){
+    $('bonusWrap').classList.remove('hidden');
+    $('bonusList').innerHTML = result.bonus.map((item, idx)=>`
+      <div class="flex gap-3">
+        <span class="mono text-[#ff7fd7] text-xs mt-1">+</span>
+        <p>${esc(item)}</p>
+      </div>
+    `).join('');
+  } else {
+    $('bonusWrap').classList.add('hidden');
+    $('bonusList').innerHTML = '';
+  }
+
+  lucide.createIcons();
+}
+
+function resultToText(result){
+  return [
+    'THE BOOKISH CHAT LOUNGE',
+    `${result.engine.name}`,
+    '',
+    `Book: ${result.data.bookTitle}`,
+    `Author: ${result.data.author || 'N/A'}`,
+    `Genre: ${result.data.genre || 'N/A'}`,
+    `Reading Stage: ${result.data.readingStage}`,
+    `Spoiler Level: ${result.data.spoilerLevel}`,
+    `Discussion Tone: ${result.data.tone}`,
+    `Group Type: ${result.data.groupType}`,
+    `Character Focus: ${result.data.characterFocus}`,
+    `Trope / Theme: ${result.data.tropeTheme || 'N/A'}`,
+    `Emotion: ${result.data.emotion}`,
+    '',
+    'WHAT IT IS',
+    result.engine.what,
+    '',
+    'BEST USED FOR',
+    result.engine.best,
+    '',
+    'CONVERSATION STARTER',
+    result.starter,
+    '',
+    'PROMPT SET',
+    ...result.prompts.map((p, i)=>`${i+1}. ${p}`),
+    '',
+    ...(result.bonus.length ? ['EXTRAS', ...result.bonus.map((p, i)=>`+ ${p}`), ''] : []),
+    'POST-READY RECAP',
+    result.recap
+  ].join('\n');
+}
+
+function saveProgress(){
+  localStorage.setItem('bookishChatLoungeProgress', JSON.stringify(getFormData()));
+  showToast('Progress saved.');
+}
+
+function loadProgress(){
+  const raw = localStorage.getItem('bookishChatLoungeProgress');
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    selectedEngineId = data.selectedEngineId || selectedEngineId;
+    $('bookTitle').value = data.bookTitle || '';
+    $('author').value = data.author || '';
+    $('genre').value = data.genre || '';
+    $('readingStage').value = data.readingStage || 'About to Start';
+    $('spoilerLevel').value = data.spoilerLevel || 'Spoiler-Free';
+    $('tone').value = data.tone || 'Funny';
+    $('groupType').value = data.groupType || 'Book Club';
+    $('characterFocus').value = data.characterFocus || 'MMC';
+    $('tropeTheme').value = data.tropeTheme || '';
+    $('emotion').value = data.emotion || 'Obsessed';
+    $('quoteScene').value = data.quoteScene || '';
+    $('notes').value = data.notes || '';
+    renderEngines();
+    updateSelectedEngineBadge();
+    extras.forEach(extra=>{
+      if(data.extras && data.extras[extra.id]){
+        document.querySelector(`[data-extra="${extra.id}"]`)?.classList.add('active');
+      }
+    });
+  }catch(e){}
+}
+
+function getSaved(){
+  try{return JSON.parse(localStorage.getItem('bookishChatLoungeSaved') || '[]')}catch(e){return []}
+}
+function setSaved(arr){
+  localStorage.setItem('bookishChatLoungeSaved', JSON.stringify(arr));
+}
+function getFavorites(){
+  try{return JSON.parse(localStorage.getItem('bookishChatLoungeFavorites') || '[]')}catch(e){return []}
+}
+function setFavorites(arr){
+  localStorage.setItem('bookishChatLoungeFavorites', JSON.stringify(arr));
+}
+
+function saveCurrentResult(){
+  if(!currentResult){ showToast('Generate a result first.'); return; }
+  const list = getSaved();
+  list.unshift(currentResult);
+  setSaved(list);
+  renderSaved();
+  showToast('Result saved.');
+}
+
+function favoriteCurrentResult(){
+  if(!currentResult){ showToast('Generate a result first.'); return; }
+  const list = getFavorites();
+  list.unshift(currentResult);
+  setFavorites(list);
+  renderFavorites();
+  showToast('Added to favorites.');
+}
+
+function renderSaved(){
+  const list = getSaved();
+  const wrap = $('savedVault');
+  if(!list.length){
+    wrap.innerHTML = `<div class="vault-card text-sm muted">No saved results yet.</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(item=>`
+    <div class="vault-card">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="font-bold">${esc(item.data.bookTitle)}</p>
+          <p class="text-xs muted mt-1">${esc(item.engine.name)} • ${esc(item.data.groupType)} • ${esc(item.data.readingStage)}</p>
+        </div>
+        <p class="mono text-[10px] text-[#ff7fd7]">${new Date(item.createdAt).toLocaleDateString()}</p>
+      </div>
+      <p class="text-sm mt-3">${esc(item.starter.slice(0,120))}${item.starter.length>120?'...':''}</p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button class="action-btn btn-secondary !py-2 !px-3 !text-xs" onclick="openSaved(${item.id})">Open</button>
+        <button class="action-btn btn-secondary !py-2 !px-3 !text-xs" onclick="favoriteSaved(${item.id})">Favorite</button>
+        <button class="action-btn btn-danger !py-2 !px-3 !text-xs" onclick="deleteSaved(${item.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFavorites(){
+  const list = getFavorites();
+  const wrap = $('favoritesVault');
+  if(!list.length){
+    wrap.innerHTML = `<div class="vault-card text-sm muted">No favorites yet.</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(item=>`
+    <div class="vault-card">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="font-bold">${esc(item.data.bookTitle)}</p>
+          <p class="text-xs muted mt-1">${esc(item.engine.name)} • ${esc(item.data.tone)} • ${esc(item.data.spoilerLevel)}</p>
+        </div>
+        <p class="mono text-[10px] text-[#ff7fd7]">${new Date(item.createdAt).toLocaleDateString()}</p>
+      </div>
+      <p class="text-sm mt-3">${esc(item.recap.slice(0,120))}${item.recap.length>120?'...':''}</p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button class="action-btn btn-secondary !py-2 !px-3 !text-xs" onclick="openFavorite(${item.id})">Open</button>
+        <button class="action-btn btn-danger !py-2 !px-3 !text-xs" onclick="deleteFavorite(${item.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openSaved = function(id){
+  const item = getSaved().find(x=>x.id===id);
+  if(!item) return;
+  currentResult = item;
+  renderResult(item);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+window.favoriteSaved = function(id){
+  const item = getSaved().find(x=>x.id===id);
+  if(!item) return;
+  const favs = getFavorites();
+  favs.unshift(item);
+  setFavorites(favs);
+  renderFavorites();
+  showToast('Saved item favorited.');
+}
+window.deleteSaved = function(id){
+  setSaved(getSaved().filter(x=>x.id!==id));
+  renderSaved();
+  showToast('Saved result removed.');
+}
+window.openFavorite = function(id){
+  const item = getFavorites().find(x=>x.id===id);
+  if(!item) return;
+  currentResult = item;
+  renderResult(item);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+window.deleteFavorite = function(id){
+  setFavorites(getFavorites().filter(x=>x.id!==id));
+  renderFavorites();
+  showToast('Favorite removed.');
+}
+
+function resetForm(){
+  document.querySelectorAll('input, textarea').forEach(el=>{
+    el.value = '';
+  });
+
+  const selectDefaults = {
+    readingStage: 'About to Start',
+    spoilerLevel: 'Spoiler-Free',
+    tone: 'Funny',
+    groupType: 'Book Club',
+    characterFocus: 'MMC',
+    emotion: 'Obsessed'
+  };
+
+  document.querySelectorAll('select').forEach(el=>{
+    el.value = selectDefaults[el.id] || (el.options[0] ? el.options[0].value : '');
+  });
+
+  document.querySelectorAll('[data-extra]').forEach(el=>el.classList.remove('active'));
+
+  selectedEngineId = engines[0].id;
+  renderEngines();
+  updateSelectedEngineBadge();
+
+  currentResult = null;
+  $('resultTitle').textContent = '';
+  $('resultMeta').textContent = '';
+  $('resultEngineName').textContent = '';
+  $('resultStarter').innerHTML = '';
+  $('resultPrompts').innerHTML = '';
+  $('resultBonus').innerHTML = '';
+  $('resultRecap').innerHTML = '';
+  $('resultPanel').classList.add('hidden');
+  $('resultEmpty').classList.remove('hidden');
+
+  localStorage.removeItem('bookishChatLoungeProgress');
+  showToast('Everything cleared.');
+}
+
+function downloadTextFile(filename, content){
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function exportPdf(){
+  if(!currentResult){ showToast('Generate a result first.'); return; }
+  const capture = $('resultCapture');
+  const canvas = await html2canvas(capture, {backgroundColor:'#000000', scale:2, useCORS:true});
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  const imgW = pageW - margin * 2;
+  const imgH = canvas.height * imgW / canvas.width;
+
+  if(imgH <= pageH - margin * 2){
+    pdf.addImage(imgData, 'PNG', margin, margin, imgW, imgH);
+  } else {
+    let y = 0;
+    const pageCanvas = document.createElement('canvas');
+    const pageCtx = pageCanvas.getContext('2d');
+    const pagePxHeight = Math.floor(canvas.width * ((pageH - margin * 2) / imgW));
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = pagePxHeight;
+
+    let first = true;
+    while(y < canvas.height){
+      pageCtx.clearRect(0,0,pageCanvas.width,pageCanvas.height);
+      pageCtx.drawImage(canvas, 0, y, canvas.width, pagePxHeight, 0, 0, canvas.width, pagePxHeight);
+      const pageImg = pageCanvas.toDataURL('image/png');
+      if(!first) pdf.addPage();
+      pdf.addImage(pageImg, 'PNG', margin, margin, imgW, (pagePxHeight * imgW / canvas.width));
+      y += pagePxHeight;
+      first = false;
+    }
+  }
+
+  pdf.save(`${(currentResult.data.bookTitle || 'bookish-chat-lounge').replace(/[^\w\-]+/g,'-').toLowerCase()}.pdf`);
+}
+
+async function exportPng(){
+  if(!currentResult){ showToast('Generate a result first.'); return; }
+  const capture = $('resultCapture');
+  const canvas = await html2canvas(capture, {backgroundColor:'#000000', scale:2, useCORS:true});
+  canvas.toBlob((blob)=>{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(currentResult.data.bookTitle || 'bookish-chat-lounge').replace(/[^\w\-]+/g,'-').toLowerCase()}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }, 'image/png', 1);
+}
+
+async function copyCurrentResult(){
+  if(!currentResult){ showToast('Generate a result first.'); return; }
+  const text = resultToText(currentResult);
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('Result copied.');
+  }catch(e){
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+    showToast('Result copied.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderEngines();
+  renderExtras();
+  updateSelectedEngineBadge();
+  loadProgress();
+  renderSaved();
+  renderFavorites();
+
+  $('generateBtn').addEventListener('click', generateResult);
+  $('saveProgressBtn').addEventListener('click', saveProgress);
+  $('resetBtn').addEventListener('click', resetForm);
+  $('saveResultBtn').addEventListener('click', saveCurrentResult);
+  $('favoriteBtn').addEventListener('click', favoriteCurrentResult);
+  $('copyResultBtn').addEventListener('click', copyCurrentResult);
+  $('exportTxtBtn').addEventListener('click', ()=>{
+    if(!currentResult){ showToast('Generate a result first.'); return; }
+    downloadTextFile(`${(currentResult.data.bookTitle || 'bookish-chat-lounge').replace(/[^\w\-]+/g,'-').toLowerCase()}.txt`, resultToText(currentResult));
+  });
+  $('exportPdfBtn').addEventListener('click', exportPdf);
+  $('exportPngBtn').addEventListener('click', exportPng);
+
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
